@@ -2,12 +2,12 @@ import sys
 import os
 import asyncio
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget, QLabel, QComboBox, QLineEdit, QDialog, QFormLayout, QInputDialog, QGridLayout, QScrollArea, QFileDialog
+from PyQt6.QtGui import QPixmap, QColor
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget, QLabel, QGridLayout, QScrollArea, QListWidgetItem
 
 # meus scripts
 from create_deck_dialog import CreateDeckDialog
-from smooth_operator import load_decks, read_deck_file, get_card_details, load_database, whattype
+from smooth_operator import load_decks, read_deck_file, get_card_details, test_database, whattype
 from konamify import ydk2konami
 
 main_deck = []
@@ -70,12 +70,11 @@ class DeckEditor(QWidget):
         # Carregar o banco de dados e os decks
         self.decks_dir = "../deck"  # Caminho onde os decks .ydk estão armazenados
         self.pics_dir = "../pics"  # Caminho onde as imagens das cartas estão armazenadas
-        self.load_database()
+        self.test_database()
         self.load_decks()
 
-    def load_database(self):
-        """Carregar o banco de dados"""
-        load_database()
+    def test_database(self):
+        test_database()
 
     def load_decks(self):
         """Carregar e exibir os decks"""
@@ -101,7 +100,13 @@ class DeckEditor(QWidget):
         card_details = get_card_details(card_ids)
         self.card_info_list.addItem(f"{deck_name} - {len(card_details)} cartas:")
         for card in card_details:
-            self.card_info_list.addItem(f"[{whattype(card['type'])}] {card['name']}")           
+            cor1, cor2, desc = whattype(card['type'])
+            item = QListWidgetItem(card['name'])
+            qcolor = QColor(cor1)
+            qcolor.setAlpha(100)  # 50% de transparência
+            item.setBackground(qcolor)  # Cor de fundo
+            item.setForeground(QColor(cor2))  # Cor do texto
+            self.card_info_list.addItem(item)         
             # Carregar e exibir a imagem da carta
             self.display_card_image(card['id'])
 

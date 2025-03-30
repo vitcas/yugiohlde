@@ -4,15 +4,11 @@ import sqlite3
 db_path = "cards.cdb"  # Caminho do banco de dados .cdb
 decks_dir = "../deck"  # Caminho onde os decks .ydk estão armazenados
 pics_dir = "../pics"  # Caminho onde as imagens das cartas estão armazenadas
-conn = None
 
-def load_database():
-    """Conectar ao banco de dados SQLite (.cdb)"""
-    global conn
+def test_database():
     if not os.path.exists(db_path):
         print(f"Banco de dados {db_path} não encontrado!")
-        return
-        
+        return        
     conn = sqlite3.connect(db_path)  # Conectando ao banco de dados
     print("Banco de dados carregado com sucesso!")
     cursor = conn.cursor()
@@ -20,6 +16,7 @@ def load_database():
     cursor.execute(query)
     card_count = cursor.fetchone()[0]
     print(f"{card_count} cartas disponíveis.")
+    conn.close()
 
 def load_decks():
     """Carregar os decks da pasta onde estão armazenados (no formato .ydk)"""
@@ -54,23 +51,17 @@ def read_deck_file(file_path):
     return main, extra, side
 
 def get_card_details(card_ids):
-    # Conectar ao banco de dados SQLite
-    global conn
-    cursor = conn.cursor()
-    
+    opencon = sqlite3.connect(db_path) 
+    cursor = opencon.cursor()
     # Lista para armazenar os resultados das cartas
-    card_details = []
-    
+    card_details = []  
     # Consultar detalhes de cada carta no banco de dados
     for card_id in card_ids:
         # Query SQL com JOIN entre as tabelas datas e texts para obter os detalhes da carta
-        query = """
-        SELECT datas.id, texts.name, texts.desc, datas.type  
-        FROM datas JOIN texts ON datas.id = texts.id WHERE datas.id = ?
-        """
+        query = """SELECT datas.id, texts.name, texts.desc, datas.type  
+        FROM datas JOIN texts ON datas.id = texts.id WHERE datas.id = ?"""
         cursor.execute(query, (card_id,))
-        result = cursor.fetchone()
-        
+        result = cursor.fetchone()      
         # Se a carta for encontrada, adicione os detalhes à lista
         if result:
             card_details.append({
@@ -79,45 +70,82 @@ def get_card_details(card_ids):
                 'description': result[2],
                 'type': result[3]
             })  
-    return card_details
-
-def showcards(deck, sauce):
-    card_details = get_card_details_from_db(sauce)
-    print(deck)
-    for card in card_details:
-        print(f"{card['id']} - {card['name']}")
+    opencon.close()
+    return card_details    
 
 def whattype(numero: int) -> str:
+    color1 = "black"
+    color2 = "white"
+    desc = "ukw"
     match numero:
         case 17:
-            return "mon-nor"
+            desc = "mon-nor"
+            color1 = "#c7c1ad"
+            color2 = "black"
         case 33:
-            return "mon-eff"
+            desc = "mon-eff"
+            color1 = "#bfa78f"
+            color2 = "black"
         case 4129:
-            return "mon-tun"
+            desc = "mon-tun"
+            color1 = "#bfa78f"
+            color2 = "black"
         case 161:
-            return "mon-rit"
+            desc = "mon-rit"
+            color1 = "black"
+            color2 = "black"
         case 16777249:
-            return "pendulum"
+            desc = "pendulum"
+            color1 = "black"
+            color2 = "black"
         case 2:
-            return "spell"
+            desc = "spell"
+            color1 = "#8fbfba"
+            color2 = "black"
         case 65538:
-            return "quic-spell"
+            desc = "quic-spell"
+            color1 = "#8fbfba"
+            color2 = "black"
         case 131074:
-            return "cont-spell"
+            desc = "cont-spell"
+            color1 = "#8fbfba"
+            color2 = "black"
+        case 524290:
+            desc = "field"
+            color1 = "#8fbfba"
+            color2 = "black"
         case 4:
-            return "trap"
+            desc = "trap"
+            color1 = "#bf8fb4"
+            color2 = "black"
         case 1048580:
-            return "coun-trap"
+            desc = "coun-trap"
+            color1 = "#bf8fb4"
+            color2 = "black"
         case 131076:
-            return "cont-trap"
+            desc = "cont-trap"
+            color1 = "#bf8fb4"
+            color2 = "black"
         case 97:
-            return "fusion"      
+            desc = "fusion"    
+            color1 = "#4d3478"  
+            color2 = "white"
         case 8225:
-            return "synchro"
+            desc = "synchro"
+            color1 = "white"
+            color2 = "black"
+        case 12321:
+            desc = "synchro"
+            color1 = "white"
+            color2 = "black"
         case 8388641:
-            return "xyz"
+            desc = "xyz"
+            color1 = "black"
+            color2 = "white"
         case 67108897:
-            return "link"      
+            desc = "link"  
+            color1 = "#0341fc"   
+            color2 = "white" 
         case _:
-            return numero
+            print(numero)
+    return color1, color2, desc

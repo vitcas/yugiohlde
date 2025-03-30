@@ -1,7 +1,8 @@
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QLineEdit, QListWidget, QPushButton, QInputDialog, QScrollArea, QGridLayout, QWidget
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QLineEdit, QListWidget, QPushButton, QInputDialog, QScrollArea, QGridLayout, QWidget, QListWidgetItem
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt
 import os
+import sqlite3
 
 class CreateDeckDialog(QDialog):
     def __init__(self, parent=None):
@@ -9,6 +10,7 @@ class CreateDeckDialog(QDialog):
 
         self.setWindowTitle("Criar Novo Deck")
         self.setGeometry(100, 100, 800, 600)
+        self.setFixedSize(800, 600)  # Bloqueia o redimensionamento
 
         # Layout principal (horizontal)
         self.main_layout = QHBoxLayout()
@@ -46,6 +48,7 @@ class CreateDeckDialog(QDialog):
         self.center_layout.addWidget(self.search_input)
         
         self.search_results = QListWidget(self)
+        self.search_results.itemClicked.connect(self.on_item_selected)
         self.center_layout.addWidget(self.search_results)
         
         self.add_card_button = QPushButton("Adicionar Carta ao Deck", self)
@@ -58,22 +61,26 @@ class CreateDeckDialog(QDialog):
         
         self.main_layout.addLayout(self.center_layout)
 
-        # Layout direito (Imagens das cartas)
+        # Layout direito (detalhes da carta)
         self.right_layout = QVBoxLayout()
-        self.card_images_label = QLabel("Preview das Cartas:")
+        self.right_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.card_images_label = QLabel("Card Preview:")
         self.right_layout.addWidget(self.card_images_label)
-        
-        self.card_images_area = QScrollArea(self)
-        self.card_images_area.setWidgetResizable(True)
-        
-        self.card_images_grid = QGridLayout()
-        self.card_images_widget = QWidget()
-        self.card_images_widget.setLayout(self.card_images_grid)
-        self.card_images_area.setWidget(self.card_images_widget)
-        
-        self.right_layout.addWidget(self.card_images_area)
-        self.main_layout.addLayout(self.right_layout)
 
+        # Criando um QLabel para exibir a imagem
+        self.image_label = QLabel()
+        pixmap = QPixmap("dummy.jpeg")  # Substitua pelo caminho da sua imagem
+        #pixmap = pixmap.scaled(300, 350, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        self.image_label.setPixmap(pixmap)
+        self.right_layout.addWidget(self.image_label)
+
+        #texto do efeito
+        self.cardeff_label = QLabel("efeito aki")
+        self.cardeff_label.setFixedWidth(250) 
+        self.cardeff_label.setWordWrap(True)  # Habilita a quebra de linha
+        self.right_layout.addWidget(self.cardeff_label)
+
+        self.main_layout.addLayout(self.right_layout)
         self.setLayout(self.main_layout)
 
         # Listas para armazenar as cartas do deck
@@ -85,37 +92,49 @@ class CreateDeckDialog(QDialog):
 
     def search_cards(self):
         """Buscar cartas por nome no banco de dados"""
-        global conn
+        conie = sqlite3.connect("cards.cdb")
         query = self.search_input.text()
         if query:
             query_sql = """
             SELECT datas.id, texts.name 
             FROM datas 
             JOIN texts ON datas.id = texts.id 
-            WHERE texts.name LIKE ? LIMIT 50
+            WHERE texts.name LIKE ? OR texts.desc LIKE ? LIMIT 50
             """
-            cursor = conn.cursor()
-            cursor.execute(query_sql, ('%' + query + '%',))
-            results = cursor.fetchall()
-            
-            self.search_results.clear()
-            
+            cursor = conie.cursor()
+            cursor.execute(query_sql, ('%' + query + '%', '%' + query + '%'))
+            results = cursor.fetchall()        
+            self.search_results.clear()            
             for card in results:
                 self.search_results.addItem(f"{card[0]} - {card[1]}")
         else:
             self.search_results.clear()
+        conie.close()
+    
+    def getEffect(self, cid):
+        """Buscar efeito da carta pelo ID no banco de dados"""
+        conie = sqlite3.connect("cards.cdb")
+        query_sql = """
+        SELECT texts.desc FROM datas 
+        JOIN texts ON datas.id = texts.id 
+        WHERE datas.id LIKE ? LIMIT 1
+        """
+        cursor = conie.cursor()
+        cursor.execute(query_sql, ('%' + cid + '%',))  # Adicione a vírgula para criar uma tupla
+        result = cursor.fetchone()  # Pega apenas um resultado  
+        conie.close()
+        # Retorna o efeito se encontrado, senão retorna uma string vazia
+        return result[0] if result else ""
 
     def add_card_to_deck(self):
         """Adicionar carta selecionada ao deck"""
         selected_item = self.search_results.currentItem()
         if selected_item:
             card_id = int(selected_item.text().split(" - ")[0])
-
             if self.deck_choice.currentText() == "Main Deck":
                 self.main_deck_ids.append(card_id)
             else:
-                self.extra_deck_ids.append(card_id)
-            
+                self.extra_deck_ids.append(card_id)          
             self.deck_card_list.addItem(selected_item.text())
             self.display_card_image(card_id)
             
@@ -135,20 +154,17 @@ class CreateDeckDialog(QDialog):
 
     def display_card_image(self, card_id):
         """Exibir a imagem da carta com base no seu ID na grade"""
-        image_path = os.path.join("../pics", f"{card_id}.jpg")
-        
+        image_path = os.path.join("../pics", f"{card_id}.jpg")      
         if os.path.exists(image_path):
+            # Carregar e redimensionar a nova imagem
             pixmap = QPixmap(image_path)
-            pixmap = pixmap.scaled(60, 80, Qt.AspectRatioMode.KeepAspectRatio)
-            
-            label = QLabel()
-            label.setPixmap(pixmap)
-            
-            max_columns = 5
-            row = self.card_images_grid.count() // max_columns
-            col = self.card_images_grid.count() % max_columns
-            
-            self.card_images_grid.addWidget(label, row, col)
+            #pixmap = pixmap.scaled(300, 350, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            # Atualizar a QLabel com a nova imagem
+            self.image_label.setPixmap(pixmap)
+        else:
+            print("Imagem não encontrada:", image_path)
+            pixmap = QPixmap("404.jpg")
+            self.image_label.setPixmap(pixmap)
             
     def save_deck(self):
         """Salvar o novo deck em um arquivo .ydk"""
@@ -169,3 +185,11 @@ class CreateDeckDialog(QDialog):
             
             print(f"Deck '{deck_name}' salvo com sucesso!")
             self.accept()
+
+    def on_item_selected(self, item: QListWidgetItem):
+        """Executa display_card_image ao selecionar um item da lista."""
+        card_text = item.text()  # Exemplo: "109401 - Dark Dimension Soldier"
+        card_id = card_text.split(" - ")[0]  # Pega apenas o ID antes do " - "
+        self.display_card_image(card_id)
+        efeito = self.getEffect(card_id)
+        self.cardeff_label.setText(efeito)
