@@ -11,9 +11,10 @@ Após baixar o repositório como **.zip**, extraia a pasta **YugiohLDE** dentro 
 ```
 ProjectIgnis/
 │── edoPro.exe
+│── pics/
+│── deck/
 │── ...
 │── YugiohLDE/  <-- Extraia o projeto aqui
-│    ├── monkey_script.js
 │    ├── main.py
 │    ├── smooth_operator.py
 │    ├── konamify.py
@@ -40,10 +41,7 @@ pip install -r requirements.txt
    ```bash
    python main.py
    ```
-2. Exporte o deck do **edoPro** e use o **konamify.py** para converter o arquivo `.ydk` para `.txt`:
-   ```bash
-   python konamify.py
-   ```
+2. Exporte o deck selecionado pelo programa e use o **tampermonkey** para importar o txt gerado na pasta exported para o site da konami.
 3. Acesse [**www.db.yugioh-card.com**](http://www.db.yugioh-card.com), use o Tampermonkey para importar o deck convertido.
 
 ## 📌 Estrutura do Projeto
