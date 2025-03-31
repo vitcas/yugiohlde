@@ -1,23 +1,50 @@
 import os
 import sqlite3
+import hashlib
 
-db_path = "cards.cdb"  # Caminho do banco de dados .cdb
+edopro = "../EDOPro.exe"
+db_path = "neodados.db"  # Caminho do banco de dados .cdb
 decks_dir = "../deck"  # Caminho onde os decks .ydk estão armazenados
 pics_dir = "../pics"  # Caminho onde as imagens das cartas estão armazenadas
 
-def test_database():
-    if not os.path.exists(db_path):
-        print(f"Banco de dados {db_path} não encontrado!")
-        return        
-    conn = sqlite3.connect(db_path)  # Conectando ao banco de dados
-    print("Banco de dados carregado com sucesso!")
-    cursor = conn.cursor()
-    query = "SELECT COUNT(*) FROM datas"  # Ajuste o nome da tabela, se necessário
-    cursor.execute(query)
-    card_count = cursor.fetchone()[0]
-    print(f"{card_count} cartas disponíveis.")
-    conn.close()
+def verifica_arquivo(caminho):
+    """
+    Verifica se o arquivo especificado existe.
+    :param caminho: Caminho do arquivo a ser verificado.
+    :return: True se o arquivo existir, False caso contrário.
+    """
+    return os.path.isfile(caminho)
 
+def contar_arquivos(diretorio):
+    """
+    Conta quantos arquivos existem dentro de um diretório.
+    :param diretorio: Caminho do diretório a ser verificado.
+    :return: Número de arquivos dentro do diretório.
+    """
+    if os.path.isdir(diretorio):
+        return len([f for f in os.listdir(diretorio) if os.path.isfile(os.path.join(diretorio, f))])
+    return 0
+
+def install_check():
+    if verifica_arquivo(edopro):
+        print("Arquivo EDOPro.exe encontrado!")
+        num_arquivos = contar_arquivos(pics_dir)
+        print(f"O diretório '{pics_dir}' contém {num_arquivos} arquivos.")
+    else:
+        print("Arquivo EDOPro.exe não encontrado!")
+
+def gerar_hash():
+    dado_aleatorio = os.urandom(32)  # Gera 32 bytes aleatórios
+    hash_gerado = hashlib.sha256(dado_aleatorio).hexdigest()
+    return hash_gerado[:7]
+
+def save_to_file(file_path, content):
+    if not os.path.exists('exported'):
+        os.makedirs('exported')
+    output_file_path = os.path.join('exported', file_path)
+    with open(output_file_path, 'w') as file:
+        file.write(content)
+        
 def load_decks():
     """Carregar os decks da pasta onde estão armazenados (no formato .ydk)"""
     if not os.path.exists(decks_dir):
@@ -50,102 +77,63 @@ def read_deck_file(file_path):
                 side.append(int(line))
     return main, extra, side
 
+def test_database():
+    if not os.path.exists(db_path):
+        print(f"Banco de dados {db_path} não encontrado!")
+        return        
+    conn = sqlite3.connect(db_path)  # Conectando ao banco de dados
+    print("Banco de dados carregado com sucesso!")
+    cursor = conn.cursor()
+    query = "SELECT COUNT(*) FROM cartas_completas"  # Ajuste o nome da tabela, se necessário
+    cursor.execute(query)
+    card_count = cursor.fetchone()[0]
+    print(f"{card_count} cartas disponíveis.")
+    conn.close()
+
+def get_card_by_name(name):
+    """Buscar cartas por nome no banco de dados"""
+    conie = sqlite3.connect(db_path)
+    query_sql = """SELECT cac.ydk_id, cac.name FROM cartas_completas AS cac 
+    WHERE cac.name LIKE ? OR cac.effectText LIKE ? LIMIT 50"""
+    cursor = conie.cursor()
+    cursor.execute(query_sql, ('%' + name + '%', '%' + name + '%'))
+    results = cursor.fetchall() 
+    conie.close()
+    return results
+
+def get_konamiIDs(main, extra):
+    deckids = []
+    deckids.append("#main")
+    main_cards = get_card_details(main)
+    for card in main_cards:
+        deckids.append(f"{card['konami_id']},{card['name']},{card['type']}")    
+    deckids.append("#extra")
+    extra_cards = get_card_details(extra)
+    for card in extra_cards:
+        deckids.append(f"{card['konami_id']},{card['name']}") 
+    deckids.append("!side")
+    return deckids
+
 def get_card_details(card_ids):
+    if not isinstance(card_ids, list):  # Se for um único ID, transforma em lista
+        card_ids = [card_ids]
     opencon = sqlite3.connect(db_path) 
     cursor = opencon.cursor()
-    # Lista para armazenar os resultados das cartas
     card_details = []  
-    # Consultar detalhes de cada carta no banco de dados
-    for card_id in card_ids:
-        # Query SQL com JOIN entre as tabelas datas e texts para obter os detalhes da carta
-        query = """SELECT datas.id, texts.name, texts.desc, datas.type  
-        FROM datas JOIN texts ON datas.id = texts.id WHERE datas.id = ?"""
+    query = """SELECT cartas.ydk_id, cartas.name, cartas.effectText, cartas.type, cartas.knami_id 
+        FROM cartas_completas as cartas WHERE cartas.ydk_id = ?"""
+    for card_id in card_ids:        
         cursor.execute(query, (card_id,))
         result = cursor.fetchone()      
-        # Se a carta for encontrada, adicione os detalhes à lista
         if result:
             card_details.append({
-                'id': result[0],
+                'ydk_id': result[0],
                 'name': result[1],
                 'description': result[2],
-                'type': result[3]
+                'type': result[3],
+                'konami_id': result[4]
             })  
     opencon.close()
+    if len(card_details) == 1 and not isinstance(card_ids, list):  
+        return card_details[0]  # Retorna um dicionário se só houver um item
     return card_details    
-
-def whattype(numero: int) -> str:
-    color1 = "black"
-    color2 = "white"
-    desc = "ukw"
-    match numero:
-        case 17:
-            desc = "mon-nor"
-            color1 = "#c7c1ad"
-            color2 = "black"
-        case 33:
-            desc = "mon-eff"
-            color1 = "#bfa78f"
-            color2 = "black"
-        case 4129:
-            desc = "mon-tun"
-            color1 = "#bfa78f"
-            color2 = "black"
-        case 161:
-            desc = "mon-rit"
-            color1 = "black"
-            color2 = "black"
-        case 16777249:
-            desc = "pendulum"
-            color1 = "black"
-            color2 = "black"
-        case 2:
-            desc = "spell"
-            color1 = "#8fbfba"
-            color2 = "black"
-        case 65538:
-            desc = "quic-spell"
-            color1 = "#8fbfba"
-            color2 = "black"
-        case 131074:
-            desc = "cont-spell"
-            color1 = "#8fbfba"
-            color2 = "black"
-        case 524290:
-            desc = "field"
-            color1 = "#8fbfba"
-            color2 = "black"
-        case 4:
-            desc = "trap"
-            color1 = "#bf8fb4"
-            color2 = "black"
-        case 1048580:
-            desc = "coun-trap"
-            color1 = "#bf8fb4"
-            color2 = "black"
-        case 131076:
-            desc = "cont-trap"
-            color1 = "#bf8fb4"
-            color2 = "black"
-        case 97:
-            desc = "fusion"    
-            color1 = "#4d3478"  
-            color2 = "white"
-        case 8225:
-            desc = "synchro"
-            color1 = "white"
-            color2 = "black"
-        case 12321:
-            desc = "synchro"
-            color1 = "white"
-            color2 = "black"
-        case 8388641:
-            desc = "xyz"
-            color1 = "black"
-            color2 = "white"
-        case 67108897:
-            desc = "link"  
-            color1 = "#0341fc"   
-            color2 = "white" 
-        case _:
-            print(numero)
-    return color1, color2, desc

@@ -1,18 +1,5 @@
 import aiohttp
 import os
-import hashlib
-
-def gerar_hash():
-    dado_aleatorio = os.urandom(32)  # Gera 32 bytes aleatórios
-    hash_gerado = hashlib.sha256(dado_aleatorio).hexdigest()
-    return hash_gerado[:7]
-
-def save_to_file(file_path, content):
-    if not os.path.exists('exported'):
-        os.makedirs('exported')
-    output_file_path = os.path.join('exported', file_path)
-    with open(output_file_path, 'w') as file:
-        file.write(content)
 
 async def ydk2konami(main, extra, side):
     fulldeck = set(main + extra + side)
