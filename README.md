@@ -5,7 +5,7 @@ YugiohLDE é um projeto que oferece um editor de decks e facilita a exportação
 
 A ideia era usar junto com o [**Project Ignis EDOPro**](https://projectignis.github.io/index.html), aproveitando a estrutura de pastas e os arquivos usados pelo programa.
 
-![tela1](https://imgur.com/UbkUVyg.png) ![tela2](https://imgur.com/Fi4EJUA.png)
+<img src="https://imgur.com/UbkUVyg.png" alt="screen1" width="400"><img src="https://imgur.com/Fi4EJUA.png" alt="screen2" width="400">
 
 ## 📥 Instalação
 
