@@ -1,8 +1,8 @@
 import os
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QLineEdit, QListWidget, QPushButton, QInputDialog, QScrollArea, QGridLayout, QWidget, QListWidgetItem
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QLineEdit, QListWidget, QPushButton, QInputDialog, QListWidgetItem
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt
-from smooth_operator import get_card_details, get_card_by_name
+from smooth_operator import get_card_details, get_card_by_name, buscar_imagem, baixar_imagem
 
 main_count = 0
 extra_count = 0
@@ -120,17 +120,17 @@ class CreateDeckDialog(QDialog):
 
     def display_card_image(self, card_id):
         """Exibir a imagem da carta com base no seu ID na grade"""
-        image_path = os.path.join("../pics", f"{card_id}.jpg")      
-        if os.path.exists(image_path):
-            # Carregar e redimensionar a nova imagem
+        encontrado, image_path = buscar_imagem(card_id)
+        if encontrado:
             pixmap = QPixmap(image_path)
-            #pixmap = pixmap.scaled(300, 350, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            pixmap = pixmap.scaled(177, 254, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
             # Atualizar a QLabel com a nova imagem
             self.image_label.setPixmap(pixmap)
         else:
-            print("Imagem não encontrada:", image_path)
+            print(image_path)
             pixmap = QPixmap("404.jpg")
-            self.image_label.setPixmap(pixmap)
+            self.image_label.setPixmap(pixmap)  
+            baixar_imagem(card_id)         
 
     def add_card_to_deck(self):
         """Adicionar carta selecionada ao deck"""

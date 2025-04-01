@@ -1,11 +1,13 @@
 import os
 import sqlite3
 import hashlib
+import requests
 
 edopro = "../EDOPro.exe"
 db_path = "neodados.db"  # Caminho do banco de dados .cdb
 decks_dir = "../deck"  # Caminho onde os decks .ydk estão armazenados
 pics_dir = "../pics"  # Caminho onde as imagens das cartas estão armazenadas
+pics_hd = "../pics_hd" 
 
 def verifica_arquivo(caminho):
     """
@@ -32,6 +34,32 @@ def install_check():
         print(f"O diretório '{pics_dir}' contém {num_arquivos} arquivos.")
     else:
         print("Arquivo EDOPro.exe não encontrado!")
+
+def buscar_imagem(nome_arquivo):
+    nome_arquivo += ".jpg"   
+    caminho1 = os.path.join(pics_dir, nome_arquivo)
+    if os.path.isfile(caminho1):
+        return True, caminho1
+    caminho2 = os.path.join(pics_hd, nome_arquivo)
+    if os.path.isfile(caminho2):
+        return True, caminho2
+    return False, "Imagem não encontrada."
+
+def baixar_imagem(nome_arquivo):
+    url = f"https://images.ygoprodeck.com/images/cards/{nome_arquivo}.jpg"
+    caminho_arquivo = os.path.join(pics_hd, f"{nome_arquivo}.jpg")    
+    os.makedirs(pics_hd, exist_ok=True)
+    try:
+        resposta = requests.get(url, stream=True)
+        if resposta.status_code == 200:
+            with open(caminho_arquivo, "wb") as f:
+                for chunk in resposta.iter_content(1024):
+                    f.write(chunk)
+            print(f"Imagem baixada: {caminho_arquivo}")
+        else:
+            print("Erro ao baixar a imagem.")
+    except Exception as e:
+        print(f"Erro: {e}")
 
 def gerar_hash():
     dado_aleatorio = os.urandom(32)  # Gera 32 bytes aleatórios

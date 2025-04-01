@@ -1,13 +1,12 @@
 import sys
 import os
-import asyncio
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap, QColor, QPalette, QGuiApplication
+from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget, QLabel, QGridLayout, QScrollArea, QListWidgetItem
 
 # meus scripts
 from new_deck import CreateDeckDialog
-from smooth_operator import load_decks, install_check, read_deck_file, get_card_details, test_database, save_to_file, get_konamiIDs, gerar_hash
+from smooth_operator import load_decks, install_check, read_deck_file, get_card_details, test_database, save_to_file, get_konamiIDs, gerar_hash, buscar_imagem, baixar_imagem
 
 main_deck = []
 extra_deck = []
@@ -109,8 +108,8 @@ class DeckEditor(QWidget):
     def display_card_image(self, card_id):
         """Exibir a imagem da carta com base no seu ID na grade"""
         image_path = os.path.join(self.pics_dir, f"{card_id}.jpg")
-        
-        if os.path.exists(image_path):
+        encontrado, image_path = buscar_imagem(card_id)
+        if encontrado:
             pixmap = QPixmap(image_path)          
             # Ajuste do tamanho da imagem para ficar pequena e adequada
             pixmap = pixmap.scaled(60, 80, Qt.AspectRatioMode.KeepAspectRatio)  # Ajuste o tamanho conforme necessário  
@@ -128,6 +127,9 @@ class DeckEditor(QWidget):
             self.card_images_grid.setSpacing(3)  # Definindo o espaçamento entre as imagens
             self.card_images_grid.setColumnStretch(col, 1)  # Ajusta o espaço das colunas
             self.card_images_grid.setRowStretch(row, 1)  # Ajusta o espaço das linhas
+        else:
+            print(image_path)
+            baixar_imagem(card_id)        
         
     def open_create_deck_dialog(self):
         self.create_deck_dialog = CreateDeckDialog(self)
@@ -143,7 +145,7 @@ class DeckEditor(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    app.setStyle("Fusion") #deactivate
+    #app.setStyle("Fusion") deactivate
     window = DeckEditor()
     window.show()
     sys.exit(app.exec())
