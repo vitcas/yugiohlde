@@ -38,8 +38,13 @@ pip install -r requirements.txt
 
 ### 3. Instalar Tampermonkey e o Script
 
-1. Instale a extensão **Tampermonkey** no seu navegador: [Tampermonkey](https://www.tampermonkey.net/)
-2. Abra a interface do Tampermonkey e adicione o script **monkey\_script.js**
+1. Instale a extensão [Tampermonkey](https://www.tampermonkey.net/) no seu navegador
+2. Abra o Tampermonkey e adicione o script **monkey\_script.js**
+
+### 4. Pré-requisitos para exportação
+- A registered Konami ID linked to your master duel game
+- Must login to Yu-Gi-Oh! Cards DB using the same Konami ID
+- If the Yu-Gi-Oh! DB website asks to login with Game Card ID just click "I don't have a game card ID" and fill some basic information to proceed
 
 ## 🚀 Como Usar
 
@@ -48,7 +53,8 @@ pip install -r requirements.txt
    python main.py
    ```
 2. Exporte o deck selecionado pelo programa gerando um arquivo txt na pasta exported.
-3. Acesse [**www.db.yugioh-card.com**](http://www.db.yugioh-card.com), use o Tampermonkey para importar o deck convertido.
+3. Acesse [**www.db.yugioh-card.com**](http://www.db.yugioh-card.com), crie um novo deck e clique em editar, deve aparecer o botão gerado pelo Tampermonkey para importar o deck salvo no txt.
+4. Depois de salvar o deck, vá no Master Duel => Main menu => Deck option => The Card database option no topo direito => seu deck exportado deve aparecer
 
 ## 📌 Estrutura do Projeto
 
@@ -59,15 +65,6 @@ pip install -r requirements.txt
 - **new\_deck.py** → Interface para criação e edição de decks (em desenvolvimento).
 - **requirements.txt** → Lista de dependências Python necessárias.
 
-## Pré-requisitos para exportação
-- A registered Konami ID linked to your master duel game
-- Must login to Yu-Gi-Oh! Cards DB using the same Konami ID
-- If the Yu-Gi-Oh! DB website asks to login with Game Card ID just click "I don't have a game card ID" and fill some basic information to proceed
-
-## Export Guide
-- Via the MDM extension (Recommended): Download on Firefox, or Chromium Browsers
-- After using the extension, go to the Master Duel game => Main menu => Deck option => The Card database option at the top right corner => locate the deck you exported and copy it
-
 ## 🛠️ Contribuição
 
 Pull requests são bem-vindos! Para grandes mudanças, abra uma issue primeiro para discutirmos o que você gostaria de modificar.
@@ -75,7 +72,3 @@ Pull requests são bem-vindos! Para grandes mudanças, abra uma issue primeiro p
 ## 📜 Licença
 
 Este projeto está sob a licença MIT. Sinta-se livre para usá-lo e modificá-lo.
-
----
-
-Projeto criado para facilitar a importação de decks do edoPro para o banco de dados oficial de cartas do Yu-Gi-Oh!.
