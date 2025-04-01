@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget, QLabel, QGridLayout, QScrollArea, QListWidgetItem
@@ -29,7 +30,7 @@ class DeckEditor(QWidget):
         self.left_layout.addWidget(self.deck_list)
         # Botão para carregar o deck escolhido
         self.load_deck_button = QPushButton("Edit Deck")
-        #self.load_deck_button.clicked.connect(self.load_selected_deck)
+        self.load_deck_button.clicked.connect(self.open_edit_deck_dialog)
         self.left_layout.addWidget(self.load_deck_button)
         # Botão para exportar deck
         self.export_deck_button = QPushButton("Export Deck")
@@ -129,10 +130,19 @@ class DeckEditor(QWidget):
             self.card_images_grid.setRowStretch(row, 1)  # Ajusta o espaço das linhas
         else:
             print(image_path)
-            baixar_imagem(card_id)        
+            baixar_imagem(card_id)
+            time.sleep(0.2)        
         
-    def open_create_deck_dialog(self):
-        self.create_deck_dialog = CreateDeckDialog(self)
+    def open_create_deck_dialog(self, vector1=None, vector2=None):
+        self.create_deck_dialog = CreateDeckDialog(self, vector1, vector2)
+        self.create_deck_dialog.exec()
+    
+    def open_edit_deck_dialog(self, vector1=None, vector2=None):
+        global main_deck
+        global extra_deck
+        vector1 = main_deck
+        vector2 = extra_deck
+        self.create_deck_dialog = CreateDeckDialog(self, vector1, vector2)
         self.create_deck_dialog.exec()
 
     def export_deck(self):

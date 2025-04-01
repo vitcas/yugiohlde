@@ -35,8 +35,8 @@ def install_check():
     else:
         print("Arquivo EDOPro.exe não encontrado!")
 
-def buscar_imagem(nome_arquivo):
-    nome_arquivo += ".jpg"   
+def buscar_imagem(id_carta):
+    nome_arquivo = f"{id_carta}.jpg"   
     caminho1 = os.path.join(pics_dir, nome_arquivo)
     if os.path.isfile(caminho1):
         return True, caminho1
@@ -46,9 +46,9 @@ def buscar_imagem(nome_arquivo):
     return False, "Imagem não encontrada."
 
 def baixar_imagem(nome_arquivo):
-    url = f"https://images.ygoprodeck.com/images/cards/{nome_arquivo}.jpg"
-    caminho_arquivo = os.path.join(pics_hd, f"{nome_arquivo}.jpg")    
-    os.makedirs(pics_hd, exist_ok=True)
+    url = f"https://images.ygoprodeck.com/images/cards_small/{nome_arquivo}.jpg"
+    caminho_arquivo = os.path.join(pics_dir, f"{nome_arquivo}.jpg")    
+    os.makedirs(pics_dir, exist_ok=True)
     try:
         resposta = requests.get(url, stream=True)
         if resposta.status_code == 200:

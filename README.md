@@ -1,8 +1,11 @@
+
 # YugiohLDE
 
-YugiohLDE é um projeto que facilita a exportação de decks para o site [**www.db.yugioh-card.com**](http://www.db.yugioh-card.com). Ele converte arquivos `.ydk` em `.txt`, permitindo a importação simplificada pelo **monkey\_script.js** em navegadores com **Tampermonkey**.
+YugiohLDE é um projeto que oferece um editor de decks e facilita a exportação para o site [**oficial**](http://www.db.yugioh-card.com). Ele converte arquivos `.ydk` em `.txt`, permitindo a importação simplificada em navegadores injetando um script com **Tampermonkey**.
 
-Por praticidade o ideal é usar junto com o [**Project Ignis EDOPro**](https://projectignis.github.io/index.html), um simulador com seu próprio editor de decks, para obter as imagens das cartas exibidas pelo programa.
+A ideia era usar junto com o [**Project Ignis EDOPro**](https://projectignis.github.io/index.html), aproveitando a estrutura de pastas e os arquivos usados pelo programa.
+
+![tela1](https://imgur.com/UbkUVyg.png) ![tela2](https://imgur.com/Fi4EJUA.png)
 
 ## 📥 Instalação
 
@@ -20,7 +23,7 @@ ProjectIgnis/
 │    ├── main.py
 │    ├── smooth_operator.py
 │    ├── konamify.py
-│    ├── create_deck_dialog.py
+│    ├── new_deck.py
 │    ├── requirements.txt
 │    ├── exported/
 ```
@@ -52,9 +55,18 @@ pip install -r requirements.txt
 - **monkey\_script.js** → Script para **Tampermonkey**, permitindo importar decks para o site.
 - **main.py** → Interface principal usando **PyQt6**.
 - **smooth\_operator.py** → Funções principais do projeto.
-- **konamify.py** → Converte `.ydk` para `.txt`, facilitando a importação no site.
-- **create\_deck\_dialog.py** → Interface para criação de decks (em desenvolvimento).
+- **konamify.py** → Converte `.ydk` para `.txt`, facilitando a importação no site. Não é mais utilizado.
+- **new\_deck.py** → Interface para criação e edição de decks (em desenvolvimento).
 - **requirements.txt** → Lista de dependências Python necessárias.
+
+## Pré-requisitos para exportação
+- A registered Konami ID linked to your master duel game
+- Must login to Yu-Gi-Oh! Cards DB using the same Konami ID
+- If the Yu-Gi-Oh! DB website asks to login with Game Card ID just click "I don't have a game card ID" and fill some basic information to proceed
+
+## Export Guide
+- Via the MDM extension (Recommended): Download on Firefox, or Chromium Browsers
+- After using the extension, go to the Master Duel game => Main menu => Deck option => The Card database option at the top right corner => locate the deck you exported and copy it
 
 ## 🛠️ Contribuição
 
@@ -67,4 +79,3 @@ Este projeto está sob a licença MIT. Sinta-se livre para usá-lo e modificá-l
 ---
 
 Projeto criado para facilitar a importação de decks do edoPro para o banco de dados oficial de cartas do Yu-Gi-Oh!.
-
