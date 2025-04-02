@@ -22,7 +22,6 @@ ProjectIgnis/
 │── YugiohLDE/  <-- Extraia o projeto aqui
 │    ├── main.py
 │    ├── smooth_operator.py
-│    ├── konamify.py
 │    ├── new_deck.py
 │    ├── requirements.txt
 │    ├── exported/
@@ -41,10 +40,10 @@ pip install -r requirements.txt
 1. Instale a extensão [Tampermonkey](https://www.tampermonkey.net/) no seu navegador
 2. Abra o Tampermonkey e adicione o script **monkey\_script.js**
 
-### 4. Pré-requisitos para exportação
-- A registered Konami ID linked to your master duel game
-- Must login to Yu-Gi-Oh! Cards DB using the same Konami ID
-- If the Yu-Gi-Oh! DB website asks to login with Game Card ID just click "I don't have a game card ID" and fill some basic information to proceed
+#### 3.1. Pré-requisitos para exportação
+- Caso você ainda não tenha uma Konami ID, basta registrar uma nova
+- Será necessária uma Konami ID conectada ao Master Duel
+- Faça login em Yu-Gi-Oh! Cards DB usando essa Konami ID
 
 ## 🚀 Como Usar
 
@@ -55,15 +54,6 @@ pip install -r requirements.txt
 2. Exporte o deck selecionado pelo programa gerando um arquivo txt na pasta exported.
 3. Acesse [**www.db.yugioh-card.com**](http://www.db.yugioh-card.com), crie um novo deck e clique em editar, deve aparecer o botão gerado pelo Tampermonkey para importar o deck salvo no txt.
 4. Depois de salvar o deck, vá no Master Duel => Main menu => Deck option => The Card database option no topo direito => seu deck exportado deve aparecer
-
-## 📌 Estrutura do Projeto
-
-- **monkey\_script.js** → Script para **Tampermonkey**, permitindo importar decks para o site.
-- **main.py** → Interface principal usando **PyQt6**.
-- **smooth\_operator.py** → Funções principais do projeto.
-- **konamify.py** → Converte `.ydk` para `.txt`, facilitando a importação no site. Não é mais utilizado.
-- **new\_deck.py** → Interface para criação e edição de decks (em desenvolvimento).
-- **requirements.txt** → Lista de dependências Python necessárias.
 
 ## 🛠️ Contribuição
 
