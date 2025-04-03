@@ -3,7 +3,7 @@ import os
 import time
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QAction
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget, QLabel, QGridLayout, QScrollArea, QListWidgetItem, QMenuBar, QMainWindow, QMessageBox, QSizePolicy
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget, QLabel, QGridLayout, QScrollArea, QListWidgetItem, QMainWindow, QMessageBox
 
 # meus scripts
 from new_deck import CreateDeckDialog
@@ -20,15 +20,15 @@ class DeckEditor(QMainWindow):
         # Inicializa a interface
         self.setWindowTitle("Deck Editor")
         self.setGeometry(100, 100, 840, 600)
-
         # Criando barra de menus
         menubar = self.menuBar()
         settings_menu = menubar.addMenu("Menu")
-
         # Criando ação para abrir as configurações
         settings_action = QAction("Settings", self)
         settings_action.triggered.connect(self.open_settings)
         settings_menu.addAction(settings_action)
+        update_action = QAction("Check for updates...", self)
+        settings_menu.addAction(update_action)
         about_action = QAction("About", self)
         about_action.triggered.connect(self.show_about)
         settings_menu.addAction(about_action)
@@ -53,11 +53,9 @@ class DeckEditor(QMainWindow):
         self.load_deck_button = QPushButton("Edit Deck")
         self.load_deck_button.clicked.connect(self.open_edit_deck_dialog)
         self.left_layout.addWidget(self.load_deck_button)
-
         self.export_deck_button = QPushButton("Export Deck")
         self.export_deck_button.clicked.connect(self.export_deck)
         self.left_layout.addWidget(self.export_deck_button)
-
         self.create_deck_button = QPushButton("New Deck")
         self.create_deck_button.clicked.connect(self.open_create_deck_dialog)
         self.left_layout.addWidget(self.create_deck_button)
@@ -84,10 +82,8 @@ class DeckEditor(QMainWindow):
         # Criar a grade inicial
         self.create_grid()  
         
-
         # Adicionar área de imagens ao layout da direita
         self.right_layout.addWidget(self.card_images_area)
-
         # Adicionar a parte direita ao layout principal
         self.main_layout.addLayout(self.right_layout)
 
@@ -116,7 +112,7 @@ class DeckEditor(QMainWindow):
 
     def show_decklist(self, deck_name, card_ids):
         card_details = get_card_details(card_ids)
-        self.card_info_list.addItem(f"{deck_name} - {len(card_details)} cartas:")
+        self.card_info_list.addItem(f"{deck_name} - {len(card_details)} cards:")
         for card in card_details:
             texto = f"[{card['type'][0]}] {card['name']}"
             item = QListWidgetItem(texto)
@@ -189,7 +185,7 @@ class DeckEditor(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    #app.setStyle("Fusion") deactivate
+    #app.setStyle("Fusion") #deactivate
     window = DeckEditor()
     window.show()
     sys.exit(app.exec())

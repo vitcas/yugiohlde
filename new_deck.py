@@ -22,13 +22,13 @@ class CreateDeckDialog(QDialog):
         # Layout esquerdo (Lista de cartas do deck)
         self.left_layout = QVBoxLayout()
         # main deck
-        self.deck_list_label = QLabel("Main Deck:")
+        self.deck_list_label = QLabel("Main Deck - 0 cards")
         self.left_layout.addWidget(self.deck_list_label)
         self.deck_card_list = QListWidget()
         self.deck_card_list.currentItemChanged.connect(self.on_item_selected)
         self.left_layout.addWidget(self.deck_card_list)
         # extra deck
-        self.deck_list_label2 = QLabel("Extra Deck:")
+        self.deck_list_label2 = QLabel("Extra Deck - 0 cards")
         self.left_layout.addWidget(self.deck_list_label2)
         self.deck_card_list_extra = QListWidget()
         self.deck_card_list_extra.currentItemChanged.connect(self.on_item_selected)
@@ -116,6 +116,7 @@ class CreateDeckDialog(QDialog):
         # Listas para armazenar as cartas do deck
         self.main_deck_ids = []
         self.extra_deck_ids = []
+        self.witchlist = 1
         
         if self.has_both_vectors():
             self.main_deck_ids = self.vector1
@@ -123,11 +124,16 @@ class CreateDeckDialog(QDialog):
             self.show_decklist(self.deck_card_list, self.main_deck_ids)
             self.show_decklist(self.deck_card_list_extra, self.extra_deck_ids)
             self.fix_counters(self.main_deck_ids, self.extra_deck_ids)
+            self.update__deck_label()
         # Conectar o campo de busca ao método de pesquisa de cartas
         self.search_input.textChanged.connect(self.search_cards)
     
     def has_both_vectors(self):
         return self.vector1 is not None and self.vector2 is not None
+    
+    def update__deck_label(self):
+        self.deck_list_label.setText(f"Main Deck - {len(self.main_deck_ids)} cards")
+        self.deck_list_label2.setText(f"Extra Deck - {len(self.extra_deck_ids)} cards")
     
     def show_decklist(self, qlist, card_ids):
         card_details = get_card_details(card_ids)
@@ -171,6 +177,10 @@ class CreateDeckDialog(QDialog):
             self.display_card_image(card_id)
             efeito = self.getEffect(card_id)
             self.cardeff_label.setText(efeito)
+            if int(card_id) in self.main_deck_ids:
+                self.witchlist = 1
+            else:
+                self.witchlist = 2
 
     def display_card_image(self, card_id):
         """Exibir a imagem da carta com base no seu ID na grade"""
@@ -188,8 +198,6 @@ class CreateDeckDialog(QDialog):
 
     def add_card_to_deck(self):
         """Adicionar carta selecionada ao deck"""
-        global main_count
-        global extra_count
         selected_item = self.search_results.currentItem()
         if selected_item:
             card_id = int(selected_item.text().split(" - ")[0])
@@ -198,9 +206,8 @@ class CreateDeckDialog(QDialog):
                 if self.main_deck_ids.count(card_id) >= 3:  # Limite de 3 cópias
                     print("Você já tem 3 cópias dessa carta no Main Deck.")
                     return
-                if main_count < 60:  # Verifica limite do deck
+                if len(self.main_deck_ids) < 60:  # Verifica limite do deck
                     self.main_deck_ids.append(card_id)
-                    main_count += 1
                 else:
                     print("Main Deck atingiu o limite de 60 cartas.")
                     return
@@ -209,27 +216,35 @@ class CreateDeckDialog(QDialog):
                 if self.extra_deck_ids.count(card_id) >= 3:  # Limite de 3 cópias
                     print("Você já tem 3 cópias dessa carta no Extra Deck.")
                     return
-                if extra_count < 15:  # Verifica limite do Extra Deck
+                if len(self.extra_deck_ids) < 15:  # Verifica limite do Extra Deck
                     self.extra_deck_ids.append(card_id)
-                    extra_count += 1
                 else:
                     print("Extra Deck atingiu o limite de 15 cartas.")
                     return
                 self.deck_card_list_extra.addItem(selected_item.text())
             # Adicionar carta à lista gráfica          
             self.display_card_image(card_id)
+            self.update__deck_label()
             
     def remove_card_from_deck(self):
         """Remover carta selecionada do deck"""
-        selected_item = self.deck_card_list.currentItem()
-        if selected_item:
-            card_text = selected_item.text()
-            card_id = int(card_text.split(" - ")[0])
-            if card_id in self.main_deck_ids:
-                self.main_deck_ids.remove(card_id)
-            elif card_id in self.extra_deck_ids:
-                self.extra_deck_ids.remove(card_id)          
-            self.deck_card_list.takeItem(self.deck_card_list.row(selected_item))
+        if self.witchlist < 2:         
+            selected_item = self.deck_card_list.currentItem()
+            if selected_item:
+                card_text = selected_item.text()
+                card_id = int(card_text.split(" - ")[0])
+                if card_id in self.main_deck_ids:
+                    self.main_deck_ids.remove(card_id)        
+                self.deck_card_list.takeItem(self.deck_card_list.row(selected_item))
+        else:
+            selected_item = self.deck_card_list_extra.currentItem()
+            if selected_item:
+                card_text = selected_item.text()
+                card_id = int(card_text.split(" - ")[0])
+                if card_id in self.extra_deck_ids:
+                    self.extra_deck_ids.remove(card_id)        
+                self.deck_card_list_extra.takeItem(self.deck_card_list_extra.row(selected_item))
+        self.update__deck_label()
             
     def save_deck(self):
         """Salvar o novo deck em um arquivo .ydk"""

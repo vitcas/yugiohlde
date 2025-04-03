@@ -1,9 +1,9 @@
 
 # YugiohLDE
 
-YugiohLDE é um projeto que oferece um editor de decks e facilita a exportação para o site [**oficial**](http://www.db.yugioh-card.com). Ele converte arquivos `.ydk` em `.txt`, permitindo a importação simplificada em navegadores injetando um script com **Tampermonkey**.
+YugiohLDE é um projeto que oferece um editor de decks simples e leve, além de facilitar a exportação para sua conta no [**site oficial**](http://www.db.yugioh-card.com), que pode ser ligada ao Master Duel e o app Neuron. Ele converte arquivos `.ydk` em `.txt`, permitindo uma importação prática em qualquer navegador, injetando javascript com a extensão **Tampermonkey**.
 
-A ideia era usar junto com o [**Project Ignis EDOPro**](https://projectignis.github.io/index.html), aproveitando a estrutura de pastas e os arquivos usados pelo programa.
+A ideia era usar junto com o [**Project Ignis EDOPro**](https://projectignis.github.io/index.html), aproveitando a estrutura de pastas e os arquivos usados pelo programa. Já é possível utilizar de maneira independente, mas caso tenha os 2 programas instalados, é melhor aproveitar a mesma pasta para as imagens de mais de 13k cartas, evitando cópias de arquivos que você já tem.
 
 <img src="https://imgur.com/UbkUVyg.png" alt="screen1" width="350"><img src="https://imgur.com/Fi4EJUA.png" alt="screen2" width="350">
 
