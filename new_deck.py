@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt
 from smooth_operator import get_card_details, get_card_by_name, buscar_imagem, baixar_imagem
+from adv_search import AdvancedSearch
 
 main_count = 0
 extra_count = 0
@@ -24,11 +25,13 @@ class CreateDeckDialog(QDialog):
         self.deck_list_label = QLabel("Main Deck:")
         self.left_layout.addWidget(self.deck_list_label)
         self.deck_card_list = QListWidget()
+        self.deck_card_list.currentItemChanged.connect(self.on_item_selected)
         self.left_layout.addWidget(self.deck_card_list)
         # extra deck
         self.deck_list_label2 = QLabel("Extra Deck:")
         self.left_layout.addWidget(self.deck_list_label2)
         self.deck_card_list_extra = QListWidget()
+        self.deck_card_list_extra.currentItemChanged.connect(self.on_item_selected)
         self.deck_card_list_extra.setFixedHeight(150) 
         self.left_layout.addWidget(self.deck_card_list_extra)      
         # Botão para remover carta do deck
@@ -67,6 +70,10 @@ class CreateDeckDialog(QDialog):
         self.search_input = QLineEdit(self)
         self.search_input.setPlaceholderText("Some card text...")
         self.center_layout.addWidget(self.search_input)
+
+        self.advanced_search_button = QPushButton("Advanced Search")
+        self.advanced_search_button.clicked.connect(self.open_advanced_search)
+        self.center_layout.addWidget(self.advanced_search_button)
         
         self.search_results = QListWidget(self)
         self.search_results.currentItemChanged.connect(self.on_item_selected)
@@ -144,6 +151,10 @@ class CreateDeckDialog(QDialog):
                 self.search_results.addItem(f"{card[0]} - {card[1]}")
         else:
             self.search_results.clear()
+
+    def open_advanced_search(self):
+        dialog = AdvancedSearch()
+        dialog.exec()
           
     def getEffect(self, cid):
         card =  get_card_details(cid)

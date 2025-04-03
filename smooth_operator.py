@@ -4,7 +4,7 @@ import hashlib
 import requests
 
 edopro = "../EDOPro.exe"
-db_path = "neodados.db"  # Caminho do banco de dados .cdb
+db_path = "gehenna.db"  # Caminho do banco de dados .cdb
 decks_dir = "../deck"  # Caminho onde os decks .ydk estão armazenados
 pics_dir = "../pics"  # Caminho onde as imagens das cartas estão armazenadas
 pics_hd = "../pics_hd" 
@@ -31,7 +31,7 @@ def install_check():
     if verifica_arquivo(edopro):
         print("Arquivo EDOPro.exe encontrado!")
         num_arquivos = contar_arquivos(pics_dir)
-        print(f"O diretório '{pics_dir}' contém {num_arquivos} arquivos.")
+        #print(f"O diretório '{pics_dir}' contém {num_arquivos} arquivos.")
     else:
         print("Arquivo EDOPro.exe não encontrado!")
 
@@ -112,7 +112,7 @@ def test_database():
     conn = sqlite3.connect(db_path)  # Conectando ao banco de dados
     print("Banco de dados carregado com sucesso!")
     cursor = conn.cursor()
-    query = "SELECT COUNT(*) FROM cartas_completas"  # Ajuste o nome da tabela, se necessário
+    query = "SELECT COUNT(*) FROM cartas"  # Ajuste o nome da tabela, se necessário
     cursor.execute(query)
     card_count = cursor.fetchone()[0]
     print(f"{card_count} cartas disponíveis.")
@@ -121,7 +121,7 @@ def test_database():
 def get_card_by_name(name):
     """Buscar cartas por nome no banco de dados"""
     conie = sqlite3.connect(db_path)
-    query_sql = """SELECT cac.ydk_id, cac.name FROM cartas_completas AS cac 
+    query_sql = """SELECT cac.ydk_id, cac.name FROM cartas AS cac 
     WHERE cac.name LIKE ? OR cac.effectText LIKE ? LIMIT 50"""
     cursor = conie.cursor()
     cursor.execute(query_sql, ('%' + name + '%', '%' + name + '%'))
@@ -149,7 +149,7 @@ def get_card_details(card_ids):
     cursor = opencon.cursor()
     card_details = []  
     query = """SELECT cartas.ydk_id, cartas.name, cartas.effectText, cartas.type, cartas.knami_id 
-        FROM cartas_completas as cartas WHERE cartas.ydk_id = ?"""
+        FROM cartas as cartas WHERE cartas.ydk_id = ?"""
     for card_id in card_ids:        
         cursor.execute(query, (card_id,))
         result = cursor.fetchone()      
