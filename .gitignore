@@ -3,10 +3,13 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.spec
 
 # Ignorar ambientes virtuais
 venv/
 exported/
+dist/
+build/
 .env/
 
 # Ignorar arquivos do sistema
