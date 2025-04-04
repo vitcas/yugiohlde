@@ -10,6 +10,7 @@ venv/
 exported/
 dist/
 build/
+logs/
 .env/
 
 # Ignorar arquivos do sistema

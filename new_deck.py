@@ -2,7 +2,7 @@ import os
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QLineEdit, QListWidget, QPushButton, QInputDialog, QListWidgetItem, QRadioButton, QButtonGroup
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt
-from smooth_operator import get_card_details, get_card_by_name, buscar_imagem, baixar_imagem
+from slave import get_card_details, get_card_by_name, buscar_imagem, baixar_imagem
 from adv_search import AdvancedSearch
 
 main_count = 0
@@ -99,7 +99,7 @@ class CreateDeckDialog(QDialog):
 
         # Criando um QLabel para exibir a imagem
         self.image_label = QLabel()
-        pixmap = QPixmap("dummy.jpeg")  # Substitua pelo caminho da sua imagem
+        pixmap = QPixmap("assets/dummy.jpeg")  # Substitua pelo caminho da sua imagem
         #pixmap = pixmap.scaled(300, 350, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         self.image_label.setPixmap(pixmap)
         self.right_layout.addWidget(self.image_label)
@@ -192,7 +192,7 @@ class CreateDeckDialog(QDialog):
             self.image_label.setPixmap(pixmap)
         else:
             print(image_path)
-            pixmap = QPixmap("404.jpg")
+            pixmap = QPixmap("assets/404.jpg")
             self.image_label.setPixmap(pixmap)  
             baixar_imagem(card_id)         
 

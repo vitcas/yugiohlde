@@ -1,14 +1,16 @@
 import sys
 import os
 import time
+from collections import Counter
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QAction
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget, QLabel, QGridLayout, QScrollArea, QListWidgetItem, QMainWindow, QMessageBox
 
 # meus scripts
+from config import log_and_print, DECKS_PATH, PICS_PATH
 from new_deck import CreateDeckDialog
 from settings import SettingsDialog
-from smooth_operator import load_decks, install_check, read_deck_file, get_card_details, test_database, save_to_file, get_konamiIDs, gerar_hash, buscar_imagem, baixar_imagem
+from slave import load_decks, install_check, read_deck_file, get_card_details, test_database, save_to_file, get_konamiIDs, gerar_hash, buscar_imagem, baixar_imagem
 
 main_deck = []
 extra_deck = []
@@ -19,7 +21,7 @@ class DeckEditor(QMainWindow):
         super().__init__()
         # Inicializa a interface
         self.setWindowTitle("Deck Editor")
-        self.setGeometry(100, 100, 840, 600)
+        self.setGeometry(100, 100, 1000, 600)
         # Criando barra de menus
         menubar = self.menuBar()
         settings_menu = menubar.addMenu("Menu")
@@ -44,7 +46,9 @@ class DeckEditor(QMainWindow):
 
         # Layout da parte esquerda
         self.left_layout = QVBoxLayout()
+        
         self.deck_list = QListWidget()
+        self.deck_list.setFixedWidth(160)
         self.left_layout.addWidget(QLabel("Pick Deck:"))
         self.deck_list.currentItemChanged.connect(self.on_item_selected)
         self.left_layout.addWidget(self.deck_list)
@@ -60,36 +64,34 @@ class DeckEditor(QMainWindow):
         self.create_deck_button.clicked.connect(self.open_create_deck_dialog)
         self.left_layout.addWidget(self.create_deck_button)
 
-        # Área de detalhes da carta
-        self.card_details_label = QLabel("Content:")
-        self.left_layout.addWidget(self.card_details_label)
-
-        # Lista de informações das cartas
-        self.card_info_list = QListWidget()
-        self.left_layout.addWidget(self.card_info_list)
-
         # Adicionar a parte esquerda ao layout principal
         self.main_layout.addLayout(self.left_layout)
 
-        # Layout da parte direita
-        self.right_layout = QVBoxLayout()
+        # Layout centro
+        self.center_layout = QVBoxLayout()
         self.card_images_label = QLabel("Preview:")
-        self.right_layout.addWidget(self.card_images_label)
-
+        self.center_layout.addWidget(self.card_images_label)
         # Scroll area para exibir imagens
         self.card_images_area = QScrollArea(self)
         self.card_images_area.setWidgetResizable(True)
         # Criar a grade inicial
-        self.create_grid()  
-        
+        self.create_grid()         
         # Adicionar área de imagens ao layout da direita
-        self.right_layout.addWidget(self.card_images_area)
+        self.center_layout.addWidget(self.card_images_area)
         # Adicionar a parte direita ao layout principal
+        self.main_layout.addLayout(self.center_layout)
+
+        #layout direita
+        self.right_layout = QVBoxLayout()
+        # Área de detalhes da carta
+        self.card_details_label = QLabel("Content:")
+        self.right_layout.addWidget(self.card_details_label)
+
+        # Lista de informações das cartas
+        self.card_info_list = QListWidget()
+        self.right_layout.addWidget(self.card_info_list)
         self.main_layout.addLayout(self.right_layout)
 
-        # Carregar o banco de dados e os decks
-        self.decks_dir = "../deck"  # Caminho onde os decks .ydk estão armazenados
-        self.pics_dir = "../pics"  # Caminho onde as imagens das cartas estão armazenadas
         test_database()
         install_check()
         self.load_decks()   
@@ -102,7 +104,7 @@ class DeckEditor(QMainWindow):
     def on_item_selected(self):
         global main_deck, extra_deck, side_deck
         selected_deck = self.deck_list.currentItem().text()
-        file_pathx = os.path.join(self.decks_dir, selected_deck)
+        file_pathx = os.path.join(DECKS_PATH, selected_deck)
         main_deck, extra_deck, side_deck = read_deck_file(file_pathx)
         self.card_info_list.clear()  # Limpar a lista de cartas
         self.create_grid() # Limpar as imagens das cartas
@@ -111,13 +113,20 @@ class DeckEditor(QMainWindow):
         self.card_images_widget.adjustSize()
 
     def show_decklist(self, deck_name, card_ids):
+        card_count = Counter(card_ids)
         card_details = get_card_details(card_ids)
-        self.card_info_list.addItem(f"{deck_name} - {len(card_details)} cards:")
+        self.card_info_list.addItem(f"---------- {deck_name} ({len(card_details)}) -----------")
         for card in card_details:
-            texto = f"[{card['type'][0]}] {card['name']}"
-            item = QListWidgetItem(texto)
-            self.card_info_list.addItem(item)         
-            self.display_card_image(card['ydk_id'])          
+            ydk_id = int(card['ydk_id'])
+            if ydk_id in card_count:
+                qtd = card_count[ydk_id]
+                texto = f"x{qtd} [{card['rarity']}] {card['name']}"
+                item = QListWidgetItem(texto)
+                self.card_info_list.addItem(item)
+                # Mostrar imagem repetida conforme a quantidade
+                for _ in range(qtd):
+                    self.display_card_image(card['ydk_id'])
+                del card_count[ydk_id]  # impede duplicação do texto                   
     
     def create_grid(self):
         """Cria uma nova grade do zero."""
@@ -138,7 +147,7 @@ class DeckEditor(QMainWindow):
 
     def display_card_image(self, card_id):
         """Exibir a imagem da carta com base no seu ID na grade"""
-        image_path = os.path.join(self.pics_dir, f"{card_id}.jpg")
+        image_path = os.path.join(PICS_PATH, f"{card_id}.jpg")
         encontrado, image_path = buscar_imagem(card_id)
         if encontrado:
             pixmap = QPixmap(image_path)
@@ -152,7 +161,7 @@ class DeckEditor(QMainWindow):
             self.card_images_grid.addWidget(label, row, col)
             self.image_count += 1  # Atualizar contador            
         else:
-            print(image_path)
+            log_and_print(image_path)
             baixar_imagem(card_id)
             time.sleep(0.2)        
         
@@ -174,7 +183,7 @@ class DeckEditor(QMainWindow):
         kids = get_konamiIDs(main_deck, extra_deck)
         finame = f"deck_output_{gerar_hash()}.txt"
         save_to_file(finame, "\n".join(kids))
-        print(f"Deck exportado em {finame}")
+        log_and_print(f"Deck exportado em {finame}")
     
     def open_settings(self):
         settings_dialog = SettingsDialog()
@@ -185,7 +194,7 @@ class DeckEditor(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    #app.setStyle("Fusion") #deactivate
+    app.setStyle("Fusion") #deactivate
     window = DeckEditor()
     window.show()
     sys.exit(app.exec())
