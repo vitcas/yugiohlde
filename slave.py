@@ -107,7 +107,7 @@ def test_database():
     conn = sqlite3.connect(DB_PATH)  # Conectando ao banco de dados
     log_and_print("Database loaded successfully!")
     cursor = conn.cursor()
-    query = "SELECT COUNT(*) FROM cartas"  # Ajuste o nome da tabela, se necessário
+    query = "SELECT COUNT(*) FROM cards"  # Ajuste o nome da tabela, se necessário
     cursor.execute(query)
     card_count = cursor.fetchone()[0]
     log_and_print(f"{card_count} cards available.")
@@ -116,8 +116,7 @@ def test_database():
 def get_card_by_name(name):
     """Buscar cartas por nome no banco de dados"""
     conie = sqlite3.connect(DB_PATH)
-    query_sql = """SELECT cac.ydk_id, cac.name FROM cartas AS cac 
-    WHERE cac.name LIKE ? OR cac.effectText LIKE ? LIMIT 50"""
+    query_sql = """SELECT ydk_id, name FROM cards WHERE name LIKE ? OR effect LIKE ? LIMIT 50"""
     cursor = conie.cursor()
     cursor.execute(query_sql, ('%' + name + '%', '%' + name + '%'))
     results = cursor.fetchall() 
@@ -143,19 +142,23 @@ def get_card_details(card_ids):
     opencon = sqlite3.connect(DB_PATH) 
     cursor = opencon.cursor()
     card_details = []  
-    query = """SELECT cartas.ydk_id, cartas.name, cartas.effectText, cartas.type, cartas.knami_id, masterduel.rarity FROM cartas INNER JOIN masterduel ON masterduel.card_id = cartas.knami_id
-         WHERE cartas.ydk_id = ?"""
+    query = """SELECT * FROM cards WHERE ydk_id = ?"""
     for card_id in card_ids:        
         cursor.execute(query, (card_id,))
         result = cursor.fetchone()      
         if result:
             card_details.append({
-                'ydk_id': result[0],
-                'name': result[1],
-                'description': result[2],
+                'konami_id': result[0],
+                'ydk_id': result[1],
+                'name': result[2],
                 'type': result[3],
-                'konami_id': result[4],
-                'rarity': result[5]
+                'description': result[4],
+                'attribute': result[5],
+                'race': result[6],
+                'level': result[7],
+                'atk': result[8],
+                'def': result[9],
+                'rarity': result[10]
             })  
     opencon.close()
     if len(card_details) == 1 and not isinstance(card_ids, list):  

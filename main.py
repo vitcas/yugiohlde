@@ -3,8 +3,8 @@ import os
 import time
 from collections import Counter
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap, QAction
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget, QLabel, QGridLayout, QScrollArea, QListWidgetItem, QMainWindow, QMessageBox
+from PyQt6.QtGui import QPixmap, QAction, QIcon
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget, QLabel, QGridLayout, QScrollArea, QListWidgetItem, QMainWindow, QMessageBox, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem
 
 # meus scripts
 from config import log_and_print, DECKS_PATH, PICS_PATH
@@ -78,7 +78,13 @@ class DeckEditor(QMainWindow):
         self.create_grid()         
         # Adicionar área de imagens ao layout da direita
         self.center_layout.addWidget(self.card_images_area)
-        # Adicionar a parte direita ao layout principal
+        
+        self.extra_area = QScrollArea(self)
+        self.extra_area.setFixedHeight(100)
+        self.extra_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.extra_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.center_layout.addWidget(self.extra_area)
+
         self.main_layout.addLayout(self.center_layout)
 
         #layout direita
@@ -109,8 +115,19 @@ class DeckEditor(QMainWindow):
         self.card_info_list.clear()  # Limpar a lista de cartas
         self.create_grid() # Limpar as imagens das cartas
         self.show_decklist("Main Deck", main_deck)
-        self.show_decklist("Extra Deck", extra_deck)
+        self.show_decklist("Extra Deck", extra_deck)     
+        self.extra_stack(extra_deck)
         self.card_images_widget.adjustSize()
+
+    def get_rarity_icon(self, rarity):
+        path_map = {
+            "UR": "assets/rarity_ur.webp",
+            "SR": "assets/rarity_sr.webp",
+            "R":  "assets/rarity_r.webp",
+            "N":  "assets/rarity_n.webp"
+        }
+        path = path_map.get(rarity.upper())
+        return QIcon(path) if path else QIcon()
 
     def show_decklist(self, deck_name, card_ids):
         card_count = Counter(card_ids)
@@ -120,12 +137,14 @@ class DeckEditor(QMainWindow):
             ydk_id = int(card['ydk_id'])
             if ydk_id in card_count:
                 qtd = card_count[ydk_id]
-                texto = f"x{qtd} [{card['rarity']}] {card['name']}"
-                item = QListWidgetItem(texto)
+                icon = self.get_rarity_icon(card['rarity'])
+                texto = f"{card['name']} x{qtd}"
+                item = QListWidgetItem(icon, texto)
                 self.card_info_list.addItem(item)
                 # Mostrar imagem repetida conforme a quantidade
-                for _ in range(qtd):
-                    self.display_card_image(card['ydk_id'])
+                if deck_name == "Main Deck":
+                    for _ in range(qtd):
+                        self.display_card_image(card['ydk_id'])
                 del card_count[ydk_id]  # impede duplicação do texto                   
     
     def create_grid(self):
@@ -133,7 +152,6 @@ class DeckEditor(QMainWindow):
         # Remover grade anterior, se existir
         if hasattr(self, 'card_images_widget'):
             self.card_images_widget.deleteLater()
-
         # Criar nova grade
         self.card_images_widget = QWidget()
         self.card_images_grid = QGridLayout()
@@ -144,6 +162,26 @@ class DeckEditor(QMainWindow):
         self.card_images_area.setFixedWidth(600) 
         # Resetar contador de imagens
         self.image_count = 0
+
+    def extra_stack(self, extra_deck):             
+        view = QGraphicsView()
+        scene = QGraphicsScene()
+        view.setScene(scene)
+        num_cartas = len(extra_deck)
+        largura_max = 600
+        offset = 38
+        for i in range(num_cartas):
+            sauce = os.path.join(PICS_PATH, f"{extra_deck[i]}.jpg")
+            pixmap = QPixmap(sauce).scaledToHeight(80, Qt.TransformationMode.SmoothTransformation)
+            item = QGraphicsPixmapItem(pixmap)
+            item.setZValue(i)
+            item.setPos(i * offset, 0)
+            scene.addItem(item)
+        scene.setSceneRect(0, 0, largura_max, 80)
+        view.setFixedSize(largura_max, 80)
+        view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.extra_area.setWidget(view)
 
     def display_card_image(self, card_id):
         """Exibir a imagem da carta com base no seu ID na grade"""
