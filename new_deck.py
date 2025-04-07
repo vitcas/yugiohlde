@@ -127,7 +127,17 @@ class CreateDeckDialog(QDialog):
             self.update__deck_label()
         # Conectar o campo de busca ao método de pesquisa de cartas
         self.search_input.textChanged.connect(self.search_cards)
+
+        self.center_on_parent()
     
+    def center_on_parent(self):
+        if self.parent():
+            parent_geom = self.parent().frameGeometry()
+            dialog_geom = self.frameGeometry()
+            center_point = parent_geom.center()
+            dialog_geom.moveCenter(center_point)
+            self.move(dialog_geom.topLeft())
+
     def has_both_vectors(self):
         return self.vector1 is not None and self.vector2 is not None
     
@@ -160,7 +170,13 @@ class CreateDeckDialog(QDialog):
 
     def open_advanced_search(self):
         dialog = AdvancedSearch()
-        dialog.exec()
+        if dialog.exec():
+            results = dialog.results
+            self.search_results.clear()
+            for card in results:
+                self.search_results.addItem(f"{card[1]} - {card[2]}")
+        else:
+            print("Search cancelled")
           
     def getEffect(self, cid):
         card =  get_card_details(cid)
