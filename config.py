@@ -9,13 +9,16 @@ settings = QSettings("MeuApp", "Config")
 edopro_path = settings.value("edopro_path", "C:/ProjectIgnis")
 use_edopro = settings.value("use_edopro", False, type=bool)
 banlist = settings.value("banlist", "nenhuma")
-
-DB_PATH = "gehenna.db"
 decks_path = os.path.join(edopro_path, "deck")
 pics_path = os.path.join(edopro_path, "pics")
+
+ABOUT_TEXT = "Deck Editor v1.0.5"
+DB_PATH = "gehenna.db"
 PICS_HD = "../pics_hd" 
 LOG_DIR = "logs"
 
+os.makedirs(pics_path, exist_ok=True)
+os.makedirs(decks_path, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)
 LOG_FILE = os.path.join(LOG_DIR, f"log_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt")
 

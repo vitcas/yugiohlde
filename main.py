@@ -7,7 +7,7 @@ from PyQt6.QtGui import QPixmap, QAction, QIcon, QFontMetrics
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget, QLabel, QGridLayout, QScrollArea, QListWidgetItem, QMainWindow, QMessageBox, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QStyledItemDelegate
 
 # meus scripts
-from config import log_and_print, decks_path, pics_path
+from config import log_and_print, decks_path, pics_path, ABOUT_TEXT
 from new_deck import CreateDeckDialog
 from settings import SettingsDialog
 from slave import load_decks, install_check, read_deck_file, get_card_details, test_database, save_to_file, get_konamiIDs, gerar_hash, buscar_imagem, baixar_imagem
@@ -64,16 +64,19 @@ class DeckEditor(QMainWindow):
         self.left_layout.addWidget(self.deck_list)
 
         # Botões
+        self.create_deck_button = QPushButton("New Deck")
+        self.create_deck_button.clicked.connect(self.open_create_deck_dialog)
+        self.left_layout.addWidget(self.create_deck_button)
         self.load_deck_button = QPushButton("Edit Deck")
         self.load_deck_button.clicked.connect(self.open_edit_deck_dialog)
         self.left_layout.addWidget(self.load_deck_button)
         self.export_deck_button = QPushButton("Export Deck")
         self.export_deck_button.clicked.connect(self.export_deck)
         self.left_layout.addWidget(self.export_deck_button)
-        self.create_deck_button = QPushButton("New Deck")
-        self.create_deck_button.clicked.connect(self.open_create_deck_dialog)
-        self.left_layout.addWidget(self.create_deck_button)
-
+        self.kaiba_ai_button = QPushButton("Kaiba AI (beta)")
+        #self.create_deck_button.clicked.connect(self.)
+        self.left_layout.addWidget(self.kaiba_ai_button)
+        
         # Adicionar a parte esquerda ao layout principal
         self.main_layout.addLayout(self.left_layout)
 
@@ -127,7 +130,7 @@ class DeckEditor(QMainWindow):
         self.create_grid() # Limpar as imagens das cartas
         self.show_decklist("Main Deck", main_deck)
         self.show_decklist("Extra Deck", extra_deck)     
-        self.extra_stack(extra_deck)
+        self.show_extra_stack(extra_deck)
         self.card_images_widget.adjustSize()
 
     def get_rarity_icon(self, rarity):
@@ -174,7 +177,7 @@ class DeckEditor(QMainWindow):
         # Resetar contador de imagens
         self.image_count = 0
 
-    def extra_stack(self, extra_deck):             
+    def show_extra_stack(self, extra_deck):             
         view = QGraphicsView()
         scene = QGraphicsScene()
         view.setScene(scene)
@@ -239,7 +242,7 @@ class DeckEditor(QMainWindow):
         settings_dialog.exec()  # Exibe como janela modal
 
     def show_about(self):
-        QMessageBox.information(self, "About", "Deck Editor v1.0.4")
+        QMessageBox.information(self, "About", ABOUT_TEXT)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

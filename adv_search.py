@@ -74,7 +74,10 @@ class AdvancedSearch(QDialog):
         # subtypes (desc from types where major = selected_type)
         conn = sqlite3.connect("gehenna.db")
         cursor = conn.cursor()
-        cursor.execute("SELECT desc FROM types WHERE major = ? ORDER BY desc", (selected_type,))
+        if selected_type.lower() in ["monster"]:
+            cursor.execute("SELECT DISTINCT frame FROM types WHERE major = ? ORDER BY frame", (selected_type,))
+        else:
+            cursor.execute("SELECT desc FROM types WHERE major = ? ORDER BY desc", (selected_type,))
         subtypes = [row[0] for row in cursor.fetchall()]
         conn.close()
 
@@ -82,7 +85,10 @@ class AdvancedSearch(QDialog):
             subtype_combo = QComboBox()
             subtype_combo.addItem("any")
             subtype_combo.addItems(subtypes)
-            self.filters["type_name"] = subtype_combo
+            if selected_type.lower() in ["monster"]:
+                self.filters["frame"] = subtype_combo
+            else:    
+                self.filters["type_name"] = subtype_combo
             self.filter_layout.addRow("Subtype:", subtype_combo)
         if selected_type.lower() in ["monster"]:
             # attribute

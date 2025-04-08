@@ -35,24 +35,23 @@ def buscar_imagem(id_carta):
     caminho1 = os.path.join(pics_path, nome_arquivo)
     if os.path.isfile(caminho1):
         return True, caminho1
-    caminho2 = os.path.join(PICS_HD, nome_arquivo)
-    if os.path.isfile(caminho2):
-        return True, caminho2
-    return False, "Image not found."
+    #caminho2 = os.path.join(PICS_HD, nome_arquivo)
+    #if os.path.isfile(caminho2):
+    #    return True, caminho2
+    return False, "Image missing, downloading..."
 
 def baixar_imagem(nome_arquivo):
     url = f"https://images.ygoprodeck.com/images/cards_small/{nome_arquivo}.jpg"
-    caminho_arquivo = os.path.join(pics_path, f"{nome_arquivo}.jpg")    
-    os.makedirs(pics_path, exist_ok=True)
+    caminho_arquivo = os.path.join(pics_path, f"{nome_arquivo}.jpg")       
     try:
         resposta = requests.get(url, stream=True)
         if resposta.status_code == 200:
             with open(caminho_arquivo, "wb") as f:
                 for chunk in resposta.iter_content(1024):
                     f.write(chunk)
-            print(f"Imagem baixada: {caminho_arquivo}")
+            print(f"Downloaded image: {caminho_arquivo}")
         else:
-            print("Erro ao baixar a imagem.")
+            print("Download error.")
     except Exception as e:
         print(f"Erro: {e}")
 
@@ -164,3 +163,34 @@ def get_card_details(card_ids):
     if len(card_details) == 1 and not isinstance(card_ids, list):  
         return card_details[0]  # Retorna um dicionário se só houver um item
     return card_details    
+
+def get_card_view_by_id(ydk_id):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row  # Permite acessar colunas por nome
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            konami_id,
+            ydk_id,
+            name,
+            type,
+            type_ext,
+            type_name,
+            race,
+            race_name,
+            level,
+            atk,
+            def,
+            eng_attr,
+            effect,
+            frame,
+            is_extra
+        FROM cards_view
+        WHERE ydk_id = ?
+    """, (ydk_id,))
+
+    row = cursor.fetchone()
+    conn.close()
+
+    return dict(row) if row else None

@@ -1,8 +1,8 @@
 import os
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QLineEdit, QListWidget, QPushButton, QInputDialog, QListWidgetItem, QRadioButton, QButtonGroup
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QPushButton, QInputDialog, QListWidgetItem
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt
-from slave import get_card_details, get_card_by_name, buscar_imagem, baixar_imagem
+from slave import get_card_details, get_card_by_name, buscar_imagem, baixar_imagem, get_card_view_by_id
 from adv_search import AdvancedSearch
 
 main_count = 0
@@ -43,34 +43,13 @@ class CreateDeckDialog(QDialog):
 
         # Layout central (formulário de criação de deck)
         self.center_layout = QVBoxLayout()
-        
-        # Criando um grupo de botões
-        self.deck_choice_group = QButtonGroup()
-        # Criando um layout horizontal para os botões
-        deck_choice_layout = QHBoxLayout()
-
-        # Criando os botões de rádio
-        self.main_deck_radio = QRadioButton("Main Deck")
-        self.extra_deck_radio = QRadioButton("Extra Deck")
-
-        # Adicionando os botões ao grupo (garante que apenas um pode ser selecionado)
-        self.deck_choice_group.addButton(self.main_deck_radio)
-        self.deck_choice_group.addButton(self.extra_deck_radio)
-
-        # Adicionando os botões ao layout
-        deck_choice_layout.addWidget(self.main_deck_radio)
-        deck_choice_layout.addWidget(self.extra_deck_radio)
-
-        # Definindo "Main Deck" como selecionado por padrão
-        self.main_deck_radio.setChecked(True)
-        
+        # campo de busca
         self.search_label = QLabel("Search card by text:")
-        self.center_layout.addWidget(self.search_label)
-        
+        self.center_layout.addWidget(self.search_label)        
         self.search_input = QLineEdit(self)
         self.search_input.setPlaceholderText("Some card text...")
         self.center_layout.addWidget(self.search_input)
-
+        # botao busca avançada
         self.advanced_search_button = QPushButton("Advanced Search")
         self.advanced_search_button.clicked.connect(self.open_advanced_search)
         self.center_layout.addWidget(self.advanced_search_button)
@@ -78,8 +57,6 @@ class CreateDeckDialog(QDialog):
         self.search_results = QListWidget(self)
         self.search_results.currentItemChanged.connect(self.on_item_selected)
         self.center_layout.addWidget(self.search_results)
-
-        self.center_layout.addLayout(deck_choice_layout)
         
         self.add_card_button = QPushButton("Add to deck", self)
         self.add_card_button.clicked.connect(self.add_card_to_deck)
@@ -217,25 +194,25 @@ class CreateDeckDialog(QDialog):
         selected_item = self.search_results.currentItem()
         if selected_item:
             card_id = int(selected_item.text().split(" - ")[0])
-            selected_button = self.deck_choice_group.checkedButton()
-            if selected_button and selected_button.text() == "Main Deck":
+            card = get_card_view_by_id(card_id)
+            if card["is_extra"] < 1:
                 if self.main_deck_ids.count(card_id) >= 3:  # Limite de 3 cópias
-                    print("Você já tem 3 cópias dessa carta no Main Deck.")
+                    print("3 copies limit!")
                     return
                 if len(self.main_deck_ids) < 60:  # Verifica limite do deck
                     self.main_deck_ids.append(card_id)
                 else:
-                    print("Main Deck atingiu o limite de 60 cartas.")
+                    print("Main Deck limit is 60!")
                     return
                 self.deck_card_list.addItem(selected_item.text())
             else:  # Extra Deck
                 if self.extra_deck_ids.count(card_id) >= 3:  # Limite de 3 cópias
-                    print("Você já tem 3 cópias dessa carta no Extra Deck.")
+                    print("3 copies limit!")
                     return
                 if len(self.extra_deck_ids) < 15:  # Verifica limite do Extra Deck
                     self.extra_deck_ids.append(card_id)
                 else:
-                    print("Extra Deck atingiu o limite de 15 cartas.")
+                    print("Extra Deck limit is 15!")
                     return
                 self.deck_card_list_extra.addItem(selected_item.text())
             # Adicionar carta à lista gráfica          
