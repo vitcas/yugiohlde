@@ -187,7 +187,7 @@ class CreateDeckDialog(QDialog):
 
     def on_item_selected(self, item: QListWidgetItem):
         """Executa display_card_image ao selecionar um item da lista."""
-        if not self.search_input.hasFocus():
+        if item:
             card_text = item.text()  # Exemplo: "109401 - Dark Dimension Soldier"
             card_id = card_text.split(" - ")[0]  # Pega apenas o ID antes do " - "
             self.display_card_image(card_id)

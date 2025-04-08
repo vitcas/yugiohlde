@@ -2,7 +2,8 @@ from PyQt6.QtWidgets import (
     QApplication, QDialog, QVBoxLayout, QLabel, QComboBox, QSpinBox,
     QPushButton, QFormLayout, QWidget, QLineEdit
 )
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QGuiApplication
 import sqlite3
 
 class AdvancedSearch(QDialog):
@@ -39,15 +40,14 @@ class AdvancedSearch(QDialog):
 
         self.setLayout(self.main_layout)
         self.update_filters()
-        QTimer.singleShot(0, self.center_on_parent)
+        self.center_on_screen()
 
-    def center_on_parent(self):
-        if self.parent():
-            parent_geom = self.parent().frameGeometry()
-            dialog_geom = self.frameGeometry()
-            center_point = parent_geom.center()
-            dialog_geom.moveCenter(center_point)
-            self.move(dialog_geom.topLeft())
+    def center_on_screen(self):
+        screen = QGuiApplication.primaryScreen()
+        screen_geometry = screen.availableGeometry()
+        dialog_geometry = self.frameGeometry()
+        dialog_geometry.moveCenter(screen_geometry.center())
+        self.move(dialog_geometry.topLeft())
 
     def load_types(self):
         conn = sqlite3.connect("gehenna.db")

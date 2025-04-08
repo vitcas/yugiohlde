@@ -11,6 +11,7 @@ exported/
 dist/
 build/
 logs/
+toolkit/
 .env/
 
 # Ignorar arquivos do sistema

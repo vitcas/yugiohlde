@@ -3,11 +3,11 @@ import os
 import time
 from collections import Counter
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap, QAction, QIcon
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget, QLabel, QGridLayout, QScrollArea, QListWidgetItem, QMainWindow, QMessageBox, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem
+from PyQt6.QtGui import QPixmap, QAction, QIcon, QFontMetrics
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget, QLabel, QGridLayout, QScrollArea, QListWidgetItem, QMainWindow, QMessageBox, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QStyledItemDelegate
 
 # meus scripts
-from config import log_and_print, DECKS_PATH, PICS_PATH
+from config import log_and_print, decks_path, pics_path
 from new_deck import CreateDeckDialog
 from settings import SettingsDialog
 from slave import load_decks, install_check, read_deck_file, get_card_details, test_database, save_to_file, get_konamiIDs, gerar_hash, buscar_imagem, baixar_imagem
@@ -16,12 +16,22 @@ main_deck = []
 extra_deck = []
 side_deck = []  
 
+class ElidedItemDelegate(QStyledItemDelegate):
+    def __init__(self, max_width, parent=None):
+        super().__init__(parent)
+        self.max_width = max_width  # largura máxima em pixels
+
+    def initStyleOption(self, option, index):
+        super().initStyleOption(option, index)
+        fm = QFontMetrics(option.font)
+        option.text = fm.elidedText(option.text, Qt.TextElideMode.ElideRight, self.max_width)
+
 class DeckEditor(QMainWindow):
     def __init__(self):
         super().__init__()
         # Inicializa a interface
         self.setWindowTitle("Deck Editor")
-        self.setGeometry(100, 100, 1000, 600)
+        self.setFixedSize(1000, 600)
         # Criando barra de menus
         menubar = self.menuBar()
         settings_menu = menubar.addMenu("Menu")
@@ -96,6 +106,7 @@ class DeckEditor(QMainWindow):
         # Lista de informações das cartas
         self.card_info_list = QListWidget()
         self.right_layout.addWidget(self.card_info_list)
+        self.card_info_list.setItemDelegate(ElidedItemDelegate(150))  # <--- Aqui!
         self.main_layout.addLayout(self.right_layout)
 
         test_database()
@@ -110,7 +121,7 @@ class DeckEditor(QMainWindow):
     def on_item_selected(self):
         global main_deck, extra_deck, side_deck
         selected_deck = self.deck_list.currentItem().text()
-        file_pathx = os.path.join(DECKS_PATH, selected_deck)
+        file_pathx = os.path.join(decks_path, selected_deck)
         main_deck, extra_deck, side_deck = read_deck_file(file_pathx)
         self.card_info_list.clear()  # Limpar a lista de cartas
         self.create_grid() # Limpar as imagens das cartas
@@ -159,7 +170,7 @@ class DeckEditor(QMainWindow):
         self.card_images_grid.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         self.card_images_widget.setLayout(self.card_images_grid)
         self.card_images_area.setWidget(self.card_images_widget)
-        self.card_images_area.setFixedWidth(600) 
+        self.card_images_area.setFixedWidth(601) 
         # Resetar contador de imagens
         self.image_count = 0
 
@@ -171,7 +182,7 @@ class DeckEditor(QMainWindow):
         largura_max = 600
         offset = 38
         for i in range(num_cartas):
-            sauce = os.path.join(PICS_PATH, f"{extra_deck[i]}.jpg")
+            sauce = os.path.join(pics_path, f"{extra_deck[i]}.jpg")
             pixmap = QPixmap(sauce).scaledToHeight(80, Qt.TransformationMode.SmoothTransformation)
             item = QGraphicsPixmapItem(pixmap)
             item.setZValue(i)
@@ -185,7 +196,7 @@ class DeckEditor(QMainWindow):
 
     def display_card_image(self, card_id):
         """Exibir a imagem da carta com base no seu ID na grade"""
-        image_path = os.path.join(PICS_PATH, f"{card_id}.jpg")
+        image_path = os.path.join(pics_path, f"{card_id}.jpg")
         encontrado, image_path = buscar_imagem(card_id)
         if encontrado:
             pixmap = QPixmap(image_path)
@@ -228,7 +239,7 @@ class DeckEditor(QMainWindow):
         settings_dialog.exec()  # Exibe como janela modal
 
     def show_about(self):
-        QMessageBox.information(self, "Sobre", "Deck Editor v1.0.1")
+        QMessageBox.information(self, "About", "Deck Editor v1.0.4")
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

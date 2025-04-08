@@ -2,7 +2,7 @@ import os
 import sqlite3
 import hashlib
 import requests
-from config import DB_PATH, EDOPRO_PATH, DECKS_PATH, PICS_PATH, PICS_HD, log_and_print
+from config import DB_PATH, edopro_path, decks_path, pics_path, PICS_HD, log_and_print
 
 def verifica_arquivo(caminho):
     """
@@ -23,7 +23,7 @@ def contar_arquivos(diretorio):
     return 0
 
 def install_check():
-    if verifica_arquivo(EDOPRO_PATH):
+    if verifica_arquivo(os.path.join(edopro_path, "EDOPro.exe")):
         print("EDOPro.exe found!")
         #num_arquivos = contar_arquivos(PICS_PATH)
         #print(f"O diretório '{pics_dir}' contém {num_arquivos} arquivos.")
@@ -32,7 +32,7 @@ def install_check():
 
 def buscar_imagem(id_carta):
     nome_arquivo = f"{id_carta}.jpg"   
-    caminho1 = os.path.join(PICS_PATH, nome_arquivo)
+    caminho1 = os.path.join(pics_path, nome_arquivo)
     if os.path.isfile(caminho1):
         return True, caminho1
     caminho2 = os.path.join(PICS_HD, nome_arquivo)
@@ -42,8 +42,8 @@ def buscar_imagem(id_carta):
 
 def baixar_imagem(nome_arquivo):
     url = f"https://images.ygoprodeck.com/images/cards_small/{nome_arquivo}.jpg"
-    caminho_arquivo = os.path.join(PICS_PATH, f"{nome_arquivo}.jpg")    
-    os.makedirs(PICS_PATH, exist_ok=True)
+    caminho_arquivo = os.path.join(pics_path, f"{nome_arquivo}.jpg")    
+    os.makedirs(pics_path, exist_ok=True)
     try:
         resposta = requests.get(url, stream=True)
         if resposta.status_code == 200:
@@ -70,10 +70,10 @@ def save_to_file(file_path, content):
         
 def load_decks():
     """Carregar os decks da pasta onde estão armazenados (no formato .ydk)"""
-    if not os.path.exists(DECKS_PATH):
-        print(f"Pasta de decks {DECKS_PATH} não encontrada!")
+    if not os.path.exists(decks_path):
+        print(f"Pasta de decks {decks_path} não encontrada!")
         return []        
-    decks = [f for f in os.listdir(DECKS_PATH) if f.endswith(".ydk")]
+    decks = [f for f in os.listdir(decks_path) if f.endswith(".ydk")]
     return decks
 
 def read_deck_file(file_path):
