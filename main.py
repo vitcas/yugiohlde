@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+import concurrent.futures
 from collections import Counter
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QAction, QIcon, QFontMetrics
@@ -10,7 +11,8 @@ from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPu
 from config import log_and_print, decks_path, pics_path, ABOUT_TEXT
 from new_deck import CreateDeckDialog
 from settings import SettingsDialog
-from slave import load_decks, install_check, read_deck_file, get_card_details, test_database, save_to_file, get_konamiIDs, gerar_hash, buscar_imagem, baixar_imagem
+from kaiba_ai import generate_random_deck, save_deck
+from slave import load_decks, install_check, read_deck_file, get_card_details, test_database, save_to_file, get_konamiIDs, gerar_hash, buscar_imagem, baixar_imagem, verifica_arquivo
 
 main_deck = []
 extra_deck = []
@@ -64,6 +66,9 @@ class DeckEditor(QMainWindow):
         self.left_layout.addWidget(self.deck_list)
 
         # Botões
+        self.reload_button = QPushButton("Reload Decks")
+        self.reload_button.clicked.connect(self.refresh_decks)
+        self.left_layout.addWidget(self.reload_button)
         self.create_deck_button = QPushButton("New Deck")
         self.create_deck_button.clicked.connect(self.open_create_deck_dialog)
         self.left_layout.addWidget(self.create_deck_button)
@@ -74,7 +79,7 @@ class DeckEditor(QMainWindow):
         self.export_deck_button.clicked.connect(self.export_deck)
         self.left_layout.addWidget(self.export_deck_button)
         self.kaiba_ai_button = QPushButton("Kaiba AI (beta)")
-        #self.create_deck_button.clicked.connect(self.)
+        self.kaiba_ai_button.clicked.connect(self.gen_and_save)
         self.left_layout.addWidget(self.kaiba_ai_button)
         
         # Adicionar a parte esquerda ao layout principal
@@ -120,10 +125,26 @@ class DeckEditor(QMainWindow):
         """Carregar e exibir os decks"""
         decks = load_decks()
         self.deck_list.addItems(decks)
+    
+    def refresh_decks(self):
+        """Atualizar a lista de decks"""
+        self.deck_list.clear()
+        decks = load_decks()
+        self.deck_list.addItems(decks)
+        if decks:
+            self.deck_list.setCurrentRow(0)
+            self.on_item_selected()
+
+    def gen_and_save(self):
+        main, extra = generate_random_deck()
+        save_deck(main, extra) 
 
     def on_item_selected(self):
         global main_deck, extra_deck, side_deck
-        selected_deck = self.deck_list.currentItem().text()
+        current_item = self.deck_list.currentItem()
+        if current_item is None:
+            return  # Evita erro se nada estiver selecionado
+        selected_deck = current_item.text()
         file_pathx = os.path.join(decks_path, selected_deck)
         main_deck, extra_deck, side_deck = read_deck_file(file_pathx)
         self.card_info_list.clear()  # Limpar a lista de cartas
@@ -144,11 +165,17 @@ class DeckEditor(QMainWindow):
         return QIcon(path) if path else QIcon()
 
     def show_decklist(self, deck_name, card_ids):
+        missing_ids = []
         card_count = Counter(card_ids)
         card_details = get_card_details(card_ids)
         self.card_info_list.addItem(f"---------- {deck_name} ({len(card_details)}) -----------")
-        for card in card_details:
+        for card in card_details:          
             ydk_id = int(card['ydk_id'])
+            encontrado, image_path = buscar_imagem(ydk_id)
+            if not encontrado:
+                log_and_print(image_path)
+                missing_ids.append(ydk_id)
+                continue
             if ydk_id in card_count:
                 qtd = card_count[ydk_id]
                 icon = self.get_rarity_icon(card['rarity'])
@@ -158,8 +185,11 @@ class DeckEditor(QMainWindow):
                 # Mostrar imagem repetida conforme a quantidade
                 if deck_name == "Main Deck":
                     for _ in range(qtd):
-                        self.display_card_image(card['ydk_id'])
-                del card_count[ydk_id]  # impede duplicação do texto                   
+                        self.display_card_image(card['ydk_id'], image_path)
+                del card_count[ydk_id]  # impede duplicação do texto   
+        # Agora baixa tudo no final
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+            executor.map(baixar_imagem, missing_ids)               
     
     def create_grid(self):
         """Cria uma nova grade do zero."""
@@ -197,11 +227,9 @@ class DeckEditor(QMainWindow):
         view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.extra_area.setWidget(view)
 
-    def display_card_image(self, card_id):
-        """Exibir a imagem da carta com base no seu ID na grade"""
-        image_path = os.path.join(pics_path, f"{card_id}.jpg")
-        encontrado, image_path = buscar_imagem(card_id)
-        if encontrado:
+    def display_card_image(self, card_id, image_path):
+        """Exibir a imagem da carta com base no seu ID na grade"""              
+        if verifica_arquivo(image_path):
             pixmap = QPixmap(image_path)
             pixmap = pixmap.scaled(54, 80, Qt.AspectRatioMode.IgnoreAspectRatio)
             #pixmap.fill(Qt.GlobalColor.red)   Placeholder vermelho para teste
@@ -211,11 +239,7 @@ class DeckEditor(QMainWindow):
             row = self.image_count // max_columns
             col = self.image_count % max_columns
             self.card_images_grid.addWidget(label, row, col)
-            self.image_count += 1  # Atualizar contador            
-        else:
-            log_and_print(image_path)
-            baixar_imagem(card_id)
-            time.sleep(0.2)        
+            self.image_count += 1  # Atualizar contador                              
         
     def open_create_deck_dialog(self, vector1=None, vector2=None):
         self.create_deck_dialog = CreateDeckDialog(self, vector1, vector2)

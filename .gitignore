@@ -4,6 +4,7 @@ __pycache__/
 *.pyo
 *.pyd
 *.spec
+*.bat
 
 # Ignorar ambientes virtuais
 venv/
