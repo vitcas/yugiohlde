@@ -1,6 +1,4 @@
-import sys
-import os
-import time
+import random, sys, os
 import concurrent.futures
 from collections import Counter
 from PyQt6.QtCore import Qt
@@ -11,7 +9,7 @@ from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPu
 from config import log_and_print, decks_path, pics_path, ABOUT_TEXT
 from new_deck import CreateDeckDialog
 from settings import SettingsDialog
-from kaiba_ai import generate_random_deck, save_deck
+from kaiba_ai_v5 import mode_select, save_deck
 from slave import load_decks, install_check, read_deck_file, get_card_details, test_database, save_to_file, get_konamiIDs, gerar_hash, buscar_imagem, baixar_imagem, verifica_arquivo
 
 main_deck = []
@@ -75,10 +73,7 @@ class DeckEditor(QMainWindow):
         self.load_deck_button = QPushButton("Edit Deck")
         self.load_deck_button.clicked.connect(self.open_edit_deck_dialog)
         self.left_layout.addWidget(self.load_deck_button)
-        self.export_deck_button = QPushButton("Export Deck")
-        self.export_deck_button.clicked.connect(self.export_deck)
-        self.left_layout.addWidget(self.export_deck_button)
-        self.kaiba_ai_button = QPushButton("Kaiba AI (beta)")
+        self.kaiba_ai_button = QPushButton("Kaiba AI")
         self.kaiba_ai_button.clicked.connect(self.gen_and_save)
         self.left_layout.addWidget(self.kaiba_ai_button)
         
@@ -136,8 +131,10 @@ class DeckEditor(QMainWindow):
             self.on_item_selected()
 
     def gen_and_save(self):
-        main, extra = generate_random_deck()
-        save_deck(main, extra) 
+        mode = random.choice([1, 2, 3, 4])
+        main, extra, name = mode_select(mode)
+        os.makedirs(decks_path, exist_ok=True)
+        save_deck(main, extra, name)
 
     def on_item_selected(self):
         global main_deck, extra_deck, side_deck
